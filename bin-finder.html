@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bin Finder">
+<title>Bin Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #e8c547;
+    --accent-dim: rgba(232, 197, 71, 0.12);
+    --text: #f0ede6;
+    --muted: #666;
+    --mono: 'DM Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 48px 24px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .search-wrap {
+    padding: 20px 24px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  input[type="search"] {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 16px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input[type="search"]:focus {
+    border-color: var(--accent);
+  }
+
+  input[type="search"]::placeholder {
+    color: var(--muted);
+  }
+
+  /* hide the X button on search inputs */
+  input[type="search"]::-webkit-search-cancel-button { display: none; }
+
+  .clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 18px;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .clear-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  .results {
+    flex: 1;
+    padding: 16px 24px 48px;
+  }
+
+  .status {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 16px 0 8px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    align-items: start;
+    animation: fadeIn 0.15s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-item {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .card-bin {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(232, 197, 71, 0.25);
+    border-radius: 3px;
+    padding: 3px 8px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .card-notes {
+    font-size: 12px;
+    color: var(--muted);
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 64px 0;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .empty-text {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 0;
+    color: var(--muted);
+  }
+
+  .spinner::after {
+    content: '';
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .config-banner {
+    margin: 24px;
+    padding: 16px;
+    border: 1px solid #c0392b44;
+    background: #c0392b11;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #e07070;
+  }
+
+  .config-banner strong {
+    color: var(--text);
+    display: block;
+    margin-bottom: 6px;
+    font-family: var(--display);
+    font-size: 14px;
+  }
+
+  .config-banner code {
+    background: var(--surface);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+    font-size: 12px;
+  }
+
+  mark {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="label">Office storage</div>
+  <h1>Bin<span>.</span>Finder</h1>
+</header>
+
+<div class="search-wrap">
+  <div class="search-row">
+    <input type="search" id="search" placeholder="Search items or bins…" autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="clear-btn" id="clearBtn" title="Clear">×</button>
+  </div>
+</div>
+
+<div class="results" id="results">
+  <!-- populated by JS -->
+</div>
+
+<script>
+  // ── CONFIGURATION ──────────────────────────────────────────
+  const SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+  // ───────────────────────────────────────────────────────────
+
+  const searchEl  = document.getElementById('search');
+  const resultsEl = document.getElementById('results');
+  const clearBtn  = document.getElementById('clearBtn');
+
+  let allItems    = [];
+  let loadError   = false;
+  let debounceTimer;
+
+  function highlight(text, query) {
+    if (!query) return text;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+  }
+
+  function render(items, query) {
+    if (loadError) return; // banner already shown
+
+    if (items === null) {
+      resultsEl.innerHTML = '<div class="spinner"></div>';
+      return;
+    }
+
+    if (items.length === 0) {
+      const msg = query
+        ? `Nothing matched <strong>${query}</strong>`
+        : 'Your sheet is empty — add some items!';
+      resultsEl.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">📦</div>
+          <div class="empty-text">${msg}</div>
+        </div>`;
+      return;
+    }
+
+    const count = `<div class="status">${items.length} result${items.length !== 1 ? 's' : ''}</div>`;
+    const cards = items.map(({ item, bin, notes }) => `
+      <div class="card">
+        <div class="card-item">${highlight(item, query)}</div>
+        <div class="card-bin">${highlight(bin, query)}</div>
+        ${notes ? `<div class="card-notes">${notes}</div>` : ''}
+      </div>
+    `).join('');
+
+    resultsEl.innerHTML = count + cards;
+  }
+
+  async function loadAll() {
+    if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+      resultsEl.innerHTML = `
+        <div class="config-banner">
+          <strong>Setup needed</strong>
+          Open this file and replace <code>YOUR_APPS_SCRIPT_URL_HERE</code>
+          with your deployed Apps Script URL. See the instructions file.
+        </div>`;
+      loadError = true;
+      return;
+    }
+
+    render(null); // show spinner
+    try {
+      const res = await fetch(SCRIPT_URL);
+      allItems = await res.json();
+      render(allItems, searchEl.value.trim());
+    } catch (err) {
+      resultsEl.innerHTML = `
+        <div class="config-banner">
+          <strong>Could not reach your sheet</strong>
+          Double-check the Apps Script URL and make sure it's deployed
+          with "Anyone" access.
+        </div>`;
+      loadError = true;
+    }
+  }
+
+  function filterAndRender() {
+    const q = searchEl.value.trim().toLowerCase();
+    if (!q) { render(allItems, ''); return; }
+    const filtered = allItems.filter(({ item, bin }) =>
+      item.toLowerCase().includes(q) || bin.toLowerCase().includes(q)
+    );
+    render(filtered, q);
+  }
+
+  searchEl.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(filterAndRender, 120);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    searchEl.value = '';
+    searchEl.focus();
+    render(allItems, '');
+  });
+
+  loadAll();
+</script>
+</body>
+</html>
