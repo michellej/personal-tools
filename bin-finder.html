@@ -338,8 +338,8 @@
     render(null); // show spinner
     try {
       const res = await fetch(SCRIPT_URL);
-      allItems = await res.json();
-      render(allItems, searchEl.value.trim());
+  allItems = await res.json();
+render(allItems, '');
     } catch (err) {
       resultsEl.innerHTML = `
         <div class="config-banner">
