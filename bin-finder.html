@@ -99,7 +99,6 @@
     color: var(--muted);
   }
 
-  /* hide the X button on search inputs */
   input[type="search"]::-webkit-search-cancel-button { display: none; }
 
   .clear-btn {
@@ -238,14 +237,6 @@
     font-size: 14px;
   }
 
-  .config-banner code {
-    background: var(--surface);
-    padding: 1px 5px;
-    border-radius: 3px;
-    color: var(--accent);
-    font-size: 12px;
-  }
-
   mark {
     background: var(--accent-dim);
     color: var(--accent);
@@ -268,21 +259,16 @@
   </div>
 </div>
 
-<div class="results" id="results">
-  <!-- populated by JS -->
-</div>
+<div class="results" id="results"></div>
 
 <script>
-  // ── CONFIGURATION ──────────────────────────────────────────
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz551O9u4gv-rgKReVTjffd1hT5C8TngTNIRK9zDhsiQ23U_ElVGlK0ILCI-QLEBtcn1Q/exec';
-  // ───────────────────────────────────────────────────────────
 
   const searchEl  = document.getElementById('search');
   const resultsEl = document.getElementById('results');
   const clearBtn  = document.getElementById('clearBtn');
 
-  let allItems    = [];
-  let loadError   = false;
+  let allItems = [];
   let debounceTimer;
 
   function highlight(text, query) {
@@ -292,25 +278,18 @@
   }
 
   function render(items, query) {
-    if (loadError) return; // banner already shown
-
     if (items === null) {
       resultsEl.innerHTML = '<div class="spinner"></div>';
       return;
     }
-
     if (items.length === 0) {
-      const msg = query
-        ? `Nothing matched <strong>${query}</strong>`
-        : 'Your sheet is empty — add some items!';
       resultsEl.innerHTML = `
         <div class="empty">
           <div class="empty-icon">📦</div>
-          <div class="empty-text">${msg}</div>
+          <div class="empty-text">${query ? 'Nothing matched ' + query : 'Your sheet is empty'}</div>
         </div>`;
       return;
     }
-
     const count = `<div class="status">${items.length} result${items.length !== 1 ? 's' : ''}</div>`;
     const cards = items.map(({ item, bin, notes }) => `
       <div class="card">
@@ -319,35 +298,21 @@
         ${notes ? `<div class="card-notes">${notes}</div>` : ''}
       </div>
     `).join('');
-
     resultsEl.innerHTML = count + cards;
   }
 
   async function loadAll() {
-    if (SCRIPT_URL === 'if (SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {') {
-      resultsEl.innerHTML = `
-        <div class="config-banner">
-          <strong>Setup needed</strong>
-          Open this file and replace <code>YOUR_APPS_SCRIPT_URL_HERE</code>
-          with your deployed Apps Script URL. See the instructions file.
-        </div>`;
-      loadError = true;
-      return;
-    }
-
-    render(null); // show spinner
+    render(null);
     try {
       const res = await fetch(SCRIPT_URL);
-  allItems = await res.json();
-render(allItems, '');
+      allItems = await res.json();
+      render(allItems, '');
     } catch (err) {
       resultsEl.innerHTML = `
         <div class="config-banner">
           <strong>Could not reach your sheet</strong>
-          Double-check the Apps Script URL and make sure it's deployed
-          with "Anyone" access.
+          Double-check the Apps Script URL and make sure it's deployed with "Anyone" access.
         </div>`;
-      loadError = true;
     }
   }
 
